@@ -1,0 +1,23 @@
+{
+  "name": "spotify-collaborative",
+  "version": "0.0.1",
+  "main": "server.js",
+  "license": "MIT",
+  "dependencies": {
+    "cookie-parser": "^1.4.3",
+    "express": "^4.16.3",
+    "next": "^5.1.0",
+    "node-fetch": "^2.1.2",
+    "nodemon": "^1.17.3",
+    "passport": "^0.4.0",
+    "passport-oauth2": "^1.4.0",
+    "passport-spotify": "^1.0.0",
+    "react": "^16.3.1",
+    "react-dom": "^16.3.1"
+  },
+  "scripts": {
+    "dev": "nodemon -w server.js server.js",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js"
+  }
+}
