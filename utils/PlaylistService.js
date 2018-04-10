@@ -65,8 +65,9 @@ export default class PlaylistService extends ServiceProvider{
             added_by: { id: adder },
             track: aux.users[adder].shift(),
           });
-        } else {
-          aux.adders.splice(index, 1);
+          if (aux.users[adder].length === 0) {
+            aux.adders.splice(index, 1);
+          }
         }
       });
     }
