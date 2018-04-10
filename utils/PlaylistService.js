@@ -8,8 +8,8 @@ export default class PlaylistService extends ServiceProvider{
 
   getPlaylist(){
     // Retrieves the profile data from localStorage
-    const profile = localStorage.getItem('playlist');
-    return profile ? JSON.parse(localStorage.playlist) : {}
+    const playlist = localStorage.getItem('playlist');
+    return playlist ? JSON.parse(localStorage.playlist) : {}
   }
 
   createPlaylist(name, p=false, collaborative=true) {

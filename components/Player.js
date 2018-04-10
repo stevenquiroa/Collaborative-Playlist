@@ -33,6 +33,7 @@ class CollaborativePlayer extends Component {
         console.log('Position in Song', position);
         console.log('Duration of Song', duration);
         console.log('Context', context);
+        console.log('State', state);
 
         this.setState({ current_track: track_window.current_track });
       });
@@ -41,6 +42,8 @@ class CollaborativePlayer extends Component {
       this.player.addListener('ready', ({ device_id }) => {
         console.log('Ready with Device ID', device_id);
         this.setState({ deviceId: device_id });
+        Player.setDevice(device_id);
+        Player.setCurrentDevice(device_id);
       });
 
       // Connect to the player!
@@ -54,7 +57,6 @@ class CollaborativePlayer extends Component {
         console.log('Toggled playback!');
       })
     } else {
-      console.log(Playlist);
       const playlist = Playlist.getPlaylist();
       const { deviceId } = this.state;
       if (deviceId && playlist && playlist.tracks.items.length > 0) {

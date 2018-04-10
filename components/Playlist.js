@@ -1,7 +1,9 @@
 import React, { Component, Fragment } from 'react';
 import PlaylistService from '../utils/PlaylistService';
+import PlayerService from "../utils/PlayerService";
 
 const Playlist = new PlaylistService('https://api.spotify.com');
+const Player = new PlayerService('https://api.spotify.com');
 
 class CollaborativePlaylist extends Component {
   state = {
@@ -43,6 +45,16 @@ class CollaborativePlaylist extends Component {
     this.setState({ reordered: false });
   };
 
+  playSong = (offset) => {
+    return () => {
+      const playlist = Playlist.getPlaylist();
+      const deviceId = Player.getCurrentDevice();
+      if (deviceId && playlist && playlist.tracks.items.length > 0) {
+        Player.play(deviceId, playlist.tracks, offset);
+      }
+    };
+  };
+
   render() {
     const { form, playlist, reordered } = this.state;
     return (
@@ -72,8 +84,8 @@ class CollaborativePlaylist extends Component {
             </pre>
             {(playlist.tracks.items.length > 0) && (
               <ul>
-                {playlist.tracks.items.map(({ added_by, track })=> (
-                  <li key={`${track.id}:${added_by.id}`}>{track.name} - {added_by.id}</li>
+                {playlist.tracks.items.map(({ added_by, track }, index)=> (
+                  <li key={index}>{track.name} - {added_by.id} - <a onClick={this.playSong(index)}>Seleccionar</a></li>
                 ))}
               </ul>
             )}
