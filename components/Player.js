@@ -1,16 +1,22 @@
 import React, {Component, Fragment} from 'react';
 import cookies from '../utils/cookies';
+import PlayerService from "../utils/PlayerService";
+import PlaylistService from "../utils/PlaylistService";
 
-class Player extends Component {
+const Player = new PlayerService('https://api.spotify.com');
+const Playlist = new PlaylistService('https://api.spotify.com');
+
+class CollaborativePlayer extends Component {
   state = {
     current_track: null,
+    deviceId: null,
   };
 
   componentDidMount () {
     window.onSpotifyWebPlaybackSDKReady = () => {
       const token = cookies.getItem('accessToken');
       this.player = new Spotify.Player({
-        name: 'Web Playback SDK Quick Start Player',
+        name: 'Collaborative Playlist Player',
         getOAuthToken: cb => { cb(token); }
       });
 
@@ -34,14 +40,34 @@ class Player extends Component {
       // Ready
       this.player.addListener('ready', ({ device_id }) => {
         console.log('Ready with Device ID', device_id);
+        this.setState({ deviceId: device_id });
       });
 
       // Connect to the player!
       this.player.connect();
     };
   }
+
+  play = () => {
+    if (this.state.current_track) {
+      this.player.togglePlay().then(() => {
+        console.log('Toggled playback!');
+      })
+    } else {
+      console.log(Playlist);
+      const playlist = Playlist.getPlaylist();
+      const { deviceId } = this.state;
+      if (deviceId && playlist && playlist.tracks.items.length > 0) {
+        Player.play(this.state.deviceId, playlist.tracks);
+      }
+    }
+  };
+
   render() {
-    const { current_track } = this.state;
+    const { current_track, deviceId } = this.state;
+    if (deviceId === null) {
+      return (<p>Cargando...</p>);
+    }
     return (
       <Fragment>
         <p>-- Player Begin --</p>
@@ -56,11 +82,7 @@ class Player extends Component {
           }}
         >Anterior</button>
         <button
-          onClick={() => {
-            this.player.togglePlay().then(() => {
-              console.log('Toggled playback!');
-            })
-          }}
+          onClick={this.play}
         >Play/Pause</button>
         <button onClick={() => {
           this.player.nextTrack().then(() => {
@@ -73,4 +95,4 @@ class Player extends Component {
   }
 }
 
-export default Player;
+export default CollaborativePlayer;
