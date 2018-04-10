@@ -31,6 +31,7 @@ export default class Devices extends Component {
         ): (
           <span>Cargando... </span>
         )}
+        &nbsp;
         <button onClick={this.props.onCancel}>Cancelar</button>
       </p>
 

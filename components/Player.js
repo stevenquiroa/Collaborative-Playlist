@@ -35,8 +35,19 @@ class CollaborativePlayer extends Component {
 
       // Playback status updates
       this.player.addListener('player_state_changed', (player) => {
-        this.setState({ player });
+
         Player.setStatus(player);
+        if (player) {
+          const currentPlayer = {
+            id: Player.getDevice(),
+            name: 'Collaborative Playlist Player',
+          };
+          Player.setCurrentDevice(currentPlayer);
+          this.setState({ player, currentPlayer });
+        } else {
+          this.setState({ player });
+        }
+
       });
 
       // Ready
@@ -86,8 +97,9 @@ class CollaborativePlayer extends Component {
         <p>-- Player Begin --</p>
         {(!this.state.changeDevice) ? (
           <p>
-            Dispositivo Actual: {this.state.currentPlayer ? this.state.currentPlayer.name : 'Ninguno'}
-            <br/>
+            Dispositivo Actual:
+            {this.state.currentPlayer ? this.state.currentPlayer.name : 'Ninguno'}
+            &nbsp;
             <button onClick={() => {
               this.setState({ changeDevice: true });
             }}>Otro dispositivo</button>
@@ -98,8 +110,9 @@ class CollaborativePlayer extends Component {
           }} onChange={this.changeDevice} />
         )}
         {player && (
-          <Fragment>
-            <p>Suena: {player.track_window.current_track.name} </p>
+          <p>
+            Suena: {player.track_window.current_track.name}
+            &nbsp;
             <button
               onClick={() => {
                 this.player.previousTrack().then(() => {
@@ -107,15 +120,17 @@ class CollaborativePlayer extends Component {
                 });
               }}
             >Anterior</button>
+            &nbsp;
             <button
               onClick={this.play}
             >Play/Pause</button>
+            &nbsp;
             <button onClick={() => {
               this.player.nextTrack().then(() => {
                 console.log('Skipped to next track!');
               });
             }}>Siguiente</button>
-          </Fragment>
+          </p>
         )}
         <p>-- Player End --</p>
       </Fragment>

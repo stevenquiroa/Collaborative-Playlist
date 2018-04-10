@@ -10,9 +10,9 @@ class Home extends Component {
   render () { return (
     <div>
       <Head>
-        <title>Spotify Web Playback SDK Quick Start Tutorial</title>
+        <title>Collaborative Playlist</title>
       </Head>
-      <h1>Spotify Web Playback SDK Quick Start Tutorial</h1>
+      <h1>Collaborative Playlist</h1>
       <h2>Open your console log: <code>View > Developer > JavaScript Console</code></h2>
       <Player />
       <Playlist />
