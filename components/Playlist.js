@@ -8,16 +8,19 @@ class CollaborativePlaylist extends Component {
     form: false,
     name: '',
     playlist: {},
+    reordered: false,
   };
 
   componentDidMount() {
     const playlist = Playlist.getPlaylist();
     if (typeof playlist.name !== 'undefined') {
       this.setState({ playlist });
-      Playlist.rehidratePlaylist()
-        .then((playlist) => {
-          this.setState({ playlist });
-        });
+      if (playlist.notSync !== true) {
+        Playlist.rehidratePlaylist()
+          .then((playlist) => {
+            this.setState({ playlist });
+          });
+      }
     }
   }
 
@@ -29,9 +32,19 @@ class CollaborativePlaylist extends Component {
       .catch(e => console.log(e));
   };
 
+  reorderPlaylist = () => {
+    const playlist = Playlist.getPlaylist();
+    const reoderedPlaylist = Playlist.reorderPlaylist(playlist);
+    this.setState({ playlist: reoderedPlaylist, reordered: true });
+  };
+
+  savePlaylist = () => {
+    Playlist.setPlaylist({ ...this.state.playlist, notSync: true });
+    this.setState({ reordered: false });
+  };
 
   render() {
-    const { form, playlist } = this.state;
+    const { form, playlist, reordered } = this.state;
     return (
       <Fragment>
         <p>-- Playlist Begin --</p>
@@ -68,6 +81,20 @@ class CollaborativePlaylist extends Component {
         )}
 
         <p>-- Playlist End --</p>
+        <p>-- Playlist Action Buttons Begin --</p>
+        {(reordered) ? (
+          <Fragment>
+            <button onClick={this.savePlaylist}>Guardar en local</button>
+          </Fragment>
+
+        ) : (
+          <Fragment>
+            <button onClick={this.reorderPlaylist}>Reordenar</button>
+          </Fragment>
+        )}
+
+
+        <p>-- Playlist Action Buttons End --</p>
       </Fragment>
     );
   }

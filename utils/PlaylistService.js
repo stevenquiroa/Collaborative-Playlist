@@ -40,4 +40,38 @@ export default class PlaylistService extends ServiceProvider{
       return Promise.resolve(rehidratedPlaylist);
     });
   }
+
+  reorderPlaylist(playlist) {
+    const { tracks } = playlist;
+    let items = [];
+    const aux = tracks.items.reduce(
+      (accumulator, { added_by, track }, currentIndex) => {
+        if (typeof accumulator.users[added_by.id] === 'undefined') {
+          accumulator.users[added_by.id] = [{ ...track, previousIndex: currentIndex}];
+          accumulator.adders.push(added_by.id);
+        } else {
+          accumulator.users[added_by.id].push({ ...track, previousIndex: currentIndex});
+        }
+
+        return accumulator;
+      },
+      {users: {}, adders: []}
+    );
+
+    while(aux.adders.length > 0) {
+      aux.adders.forEach((adder, index) => {
+        if (aux.users[adder].length > 0) {
+          items.push({
+            added_by: { id: adder },
+            track: aux.users[adder].shift(),
+          });
+        } else {
+          aux.adders.splice(index, 1);
+        }
+      });
+    }
+
+    playlist.tracks.items = items;
+    return playlist;
+  }
 }
