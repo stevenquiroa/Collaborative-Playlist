@@ -36,7 +36,8 @@ app.prepare().then(() => {
   server.get('/auth/spotify', passport.authenticate('spotify', {
     scope: [
       "streaming", "user-read-birthdate", "user-read-email",
-      "user-read-private", "playlist-modify-private", "playlist-modify-public"
+      "user-read-private", "playlist-modify-private", "playlist-modify-public",
+      "user-read-playback-state"
     ],
     session: false,
     showDialog: true

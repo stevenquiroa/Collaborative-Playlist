@@ -1,5 +1,8 @@
 import React, {Component, Fragment} from 'react';
 import cookies from '../utils/cookies';
+
+import Devices from './Devices';
+
 import PlayerService from "../utils/PlayerService";
 import PlaylistService from "../utils/PlaylistService";
 
@@ -10,6 +13,10 @@ class CollaborativePlayer extends Component {
   state = {
     current_track: null,
     deviceId: null,
+    player: null,
+    currentPlayer: null,
+    devices: [],
+    changeDevice: false,
   };
 
   componentDidMount () {
@@ -27,70 +34,89 @@ class CollaborativePlayer extends Component {
       this.player.addListener('playback_error', ({ message }) => { console.error(message); });
 
       // Playback status updates
-      this.player.addListener('player_state_changed', (state) => {
-        const { position, duration, track_window, context } = state;
-        console.log('Currently Playing', track_window);
-        console.log('Position in Song', position);
-        console.log('Duration of Song', duration);
-        console.log('Context', context);
-        console.log('State', state);
-
-        this.setState({ current_track: track_window.current_track });
+      this.player.addListener('player_state_changed', (player) => {
+        this.setState({ player });
+        Player.setStatus(player);
       });
 
       // Ready
       this.player.addListener('ready', ({ device_id }) => {
-        console.log('Ready with Device ID', device_id);
         this.setState({ deviceId: device_id });
         Player.setDevice(device_id);
-        Player.setCurrentDevice(device_id);
       });
 
       // Connect to the player!
       this.player.connect();
     };
+    Player.getCurrent().then((res) => {
+      if (res.device) {
+        this.setState({ currentPlayer: res.device });
+      }
+    });
   }
 
   play = () => {
-    if (this.state.current_track) {
+    if (this.state.player && this.state.player.track_window.current_track) {
       this.player.togglePlay().then(() => {
         console.log('Toggled playback!');
-      })
+      });
     } else {
       const playlist = Playlist.getPlaylist();
-      const { deviceId } = this.state;
+      const deviceId = this.state.deviceId;
       if (deviceId && playlist && playlist.tracks.items.length > 0) {
-        Player.play(this.state.deviceId, playlist.tracks);
+        Player.play(deviceId, playlist.tracks);
       }
     }
   };
 
+  changeDevice = (device) => {
+    this.setState({ changeDevice: false, currentPlayer: device });
+    Player.changeDevice(device.id);
+    Player.setCurrentDevice(device);
+  };
+
   render() {
-    const { current_track, deviceId } = this.state;
+    const { player, deviceId } = this.state;
     if (deviceId === null) {
       return (<p>Cargando...</p>);
     }
+
     return (
       <Fragment>
         <p>-- Player Begin --</p>
-        {current_track && (
-          <p>Suena: {current_track.name} </p>
+        {(!this.state.changeDevice) ? (
+          <p>
+            Dispositivo Actual: {this.state.currentPlayer ? this.state.currentPlayer.name : 'Ninguno'}
+            <br/>
+            <button onClick={() => {
+              this.setState({ changeDevice: true });
+            }}>Otro dispositivo</button>
+          </p>
+        ): (
+          <Devices onCancel={() => {
+            this.setState({ changeDevice: false });
+          }} onChange={this.changeDevice} />
         )}
-        <button
-          onClick={() => {
-            this.player.previousTrack().then(() => {
-              console.log('Set to previous track!');
-            });
-          }}
-        >Anterior</button>
-        <button
-          onClick={this.play}
-        >Play/Pause</button>
-        <button onClick={() => {
-          this.player.nextTrack().then(() => {
-            console.log('Skipped to next track!');
-          });
-        }}>Siguiente</button>
+        {player && (
+          <Fragment>
+            <p>Suena: {player.track_window.current_track.name} </p>
+            <button
+              onClick={() => {
+                this.player.previousTrack().then(() => {
+                  console.log('Set to previous track!');
+                });
+              }}
+            >Anterior</button>
+            <button
+              onClick={this.play}
+            >Play/Pause</button>
+            <button onClick={() => {
+              this.player.nextTrack().then(() => {
+                console.log('Skipped to next track!');
+              });
+            }}>Siguiente</button>
+          </Fragment>
+        )}
         <p>-- Player End --</p>
       </Fragment>
     )

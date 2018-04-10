@@ -48,7 +48,8 @@ class CollaborativePlaylist extends Component {
   playSong = (offset) => {
     return () => {
       const playlist = Playlist.getPlaylist();
-      const deviceId = Player.getCurrentDevice();
+      const currentDevice = Player.getCurrentDevice();
+      const deviceId = (currentDevice) ? currentDevice.id : Player.getDevice();
       if (deviceId && playlist && playlist.tracks.items.length > 0) {
         Player.play(deviceId, playlist.tracks, offset);
       }

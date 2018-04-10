@@ -1,13 +1,51 @@
 import ServiceProvider from "./ServiceProvider";
 
 export default class PlayerService extends ServiceProvider {
-  play(deviceId, tracks, position=0) {
-    const uris = tracks.items.map(({ track }) => `spotify:track:${track.id}`);
-    this.fetch(`${this.domain}/v1/me/player/play?device_id=${deviceId}`, {
+  play(deviceId, tracks, position) {
+    let url = `${this.domain}/v1/me/player/play`;
+    let data = {};
+
+    if (deviceId) {
+      url = `${url}?device_id=${deviceId}`;
+    }
+
+    if (tracks) {
+      data.uris = tracks.items.map(({ track }) => `spotify:track:${track.id}`);
+    }
+
+    if (position) {
+      data.offset = { position };
+    }
+
+    return this.fetch(url, {
       method: 'PUT',
-      body: JSON.stringify({ uris, offset: { position } }),
+      body: JSON.stringify(data),
     });
 
+  }
+
+  getCurrent = () => {
+    return this.fetch(`${this.domain}/v1/me/player`).then((res) => {
+      if (res.device) {
+        this.setCurrentDevice(res.device);
+      }
+      return Promise.resolve(res)
+    }).catch(res => {
+      console.log(res);
+    });
+  };
+
+  changeDevice = (deviceId) => {
+    return this.fetch(`${this.domain}/v1/me/player`, {
+      method: 'PUT',
+      body: JSON.stringify({ device_ids: [deviceId]})
+    });
+  };
+
+  getDevices () {
+    return this.fetch(`${this.domain}/v1/me/player/devices`, {
+      method: 'GET',
+    });
   }
 
   setDevice(deviceId) {
@@ -16,15 +54,25 @@ export default class PlayerService extends ServiceProvider {
 
   getDevice() {
     const deviceId = localStorage.getItem('deviceId');
-    return deviceId ? deviceId : null;
+    return deviceId ? localStorage.deviceId : null;
   }
 
-  setCurrentDevice(deviceId) {
-    localStorage.setItem('currentDeviceId', deviceId);
+  setStatus(status) {
+    localStorage.setItem('player', JSON.stringify(status));
+  }
+
+  getStatus() {
+    const player = localStorage.getItem('player');
+    return player ? JSON.parse(localStorage.player) : null;
+  }
+
+
+  setCurrentDevice(device) {
+    localStorage.setItem('current', JSON.stringify(device));
   }
 
   getCurrentDevice() {
-    const deviceId = localStorage.getItem('currentDeviceId');
-    return deviceId ? deviceId : null;
+    const deviceId = localStorage.getItem('current');
+    return deviceId ? JSON.parse(localStorage.current) : null;
   }
 }
