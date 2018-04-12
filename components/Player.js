@@ -59,7 +59,7 @@ class CollaborativePlayer extends Component {
       // Connect to the player!
       this.player.connect();
     };
-    Player.getCurrent().then((res) => {
+    Player.fetchStatus().then((res) => {
       if (res.device) {
         this.setState({ currentPlayer: res.device });
       }
@@ -98,6 +98,7 @@ class CollaborativePlayer extends Component {
         {(!this.state.changeDevice) ? (
           <p>
             Dispositivo Actual:
+            &nbsp;
             {this.state.currentPlayer ? this.state.currentPlayer.name : 'Ninguno'}
             &nbsp;
             <button onClick={() => {

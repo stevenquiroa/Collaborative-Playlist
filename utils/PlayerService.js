@@ -24,7 +24,7 @@ export default class PlayerService extends ServiceProvider {
 
   }
 
-  getCurrent = () => {
+  fetchStatus = () => {
     return this.fetch(`${this.domain}/v1/me/player`).then((res) => {
       if (res.device) {
         this.setCurrentDevice(res.device);
