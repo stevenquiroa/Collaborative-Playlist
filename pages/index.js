@@ -11,6 +11,7 @@ class Home extends Component {
     <div>
       <Head>
         <title>Collaborative Playlist</title>
+        <script src="https://sdk.scdn.co/spotify-player.js"/>
       </Head>
       <h1>Collaborative Playlist</h1>
       <h2>Open your console log: <code>View > Developer > JavaScript Console</code></h2>

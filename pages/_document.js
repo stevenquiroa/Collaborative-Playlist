@@ -8,7 +8,6 @@ export default class MyDocument extends Document {
         <body className="custom_class">
           <Main />
           <NextScript />
-          <script src="https://sdk.scdn.co/spotify-player.js"/>
         </body>
       </html>
     )
