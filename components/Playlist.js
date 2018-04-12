@@ -1,6 +1,7 @@
 import React, { Component, Fragment } from 'react';
 import PlaylistService from '../utils/PlaylistService';
 import PlayerService from "../utils/PlayerService";
+import CreateOrUpdatePlaylist from "./CreateOrUpdatePlaylist";
 
 const Playlist = new PlaylistService('https://api.spotify.com');
 const Player = new PlayerService('https://api.spotify.com');
@@ -17,22 +18,16 @@ class CollaborativePlaylist extends Component {
     const playlist = Playlist.getPlaylist();
     if (typeof playlist.name !== 'undefined') {
       this.setState({ playlist });
+
       if (playlist.notSync !== true) {
         Playlist.rehidratePlaylist()
-          .then((playlist) => {
+          .then((res) => {
+            const playlist = Playlist.reorderPlaylist(res);
             this.setState({ playlist });
           });
       }
     }
   }
-
-  createPlaylist = () => {
-    Playlist.createPlaylist(`${this.state.name} - Collaborative`)
-      .then((res) => {
-        this.setState({ playlist: res, form: false });
-      })
-      .catch(e => console.log(e));
-  };
 
   reorderPlaylist = () => {
     const playlist = Playlist.getPlaylist();
@@ -57,24 +52,12 @@ class CollaborativePlaylist extends Component {
   };
 
   render() {
-    const { form, playlist, reordered } = this.state;
+    const { playlist, reordered } = this.state;
+    console.log(playlist);
     return (
       <Fragment>
         <p>-- Playlist Begin --</p>
-        {(form) ? (
-          <div>
-            <p>Nombre: <input type="text" name="name" onChange={({ target }) => {
-              this.setState({ name: target.value });
-            }} value={this.state.name} /> - Collaborative</p>
-            <button onClick={this.createPlaylist}>Crear</button>
-          </div>
-        ) : (
-          <button
-            onClick={() => {
-             this.setState({ form: true });
-            }}
-          >Crear Lista Collaborativa</button>
-        )}
+        <CreateOrUpdatePlaylist nextStep={()=>{}} />
 
         {(typeof playlist.name !== 'undefined') && (
           <Fragment>
