@@ -20,31 +20,42 @@ const spotifyConfig = {
   clientID: process.env.REACT_APP_SPOTIFY_ID,
   clientSecret: process.env.REACT_APP_SPOTIFY_SECRET,
   callbackURL: process.env.REACT_APP_SPOTIFY_CALLBACK,
+  showDialog: true,
 };
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
 
 app.prepare().then(() => {
   const server = express();
 
   server.use(cookieParser());
   server.use(passport.initialize());
+  server.use(passport.session());
 
   passport.use(new SpotifyStrategy(spotifyConfig, (accessToken, refreshToken, expiresIn, profile, done) => {
       done(null, {...profile, accessToken, refreshToken, expiresIn });
     }
   ));
 
-  server.get('/auth/spotify', passport.authenticate('spotify', {
-    scope: [
-      "streaming", "user-read-birthdate", "user-read-email",
-      "user-read-private", "playlist-modify-private", "playlist-modify-public",
-      "user-read-playback-state"
-    ],
-    session: false,
-    showDialog: true
-  }));
+  server.get('/auth/spotify',
+    passport.authenticate('spotify', {
+      scope: [
+        "streaming", "user-read-birthdate", "user-read-email",
+        "user-read-private", "playlist-modify-private", "playlist-modify-public",
+        "user-read-playback-state", 'playlist-read-collaborative',
+      ],
+      showDialog: true
+    })
+  );
 
   server.get('/auth/callback',
-    passport.authenticate('spotify', { failureRedirect: '/login', session: false }),
+    passport.authenticate('spotify', { failureRedirect: '/login' }),
     (req, res) => {
       const user = req.user;
       const { accessToken, refreshToken, expiresIn } = user;
