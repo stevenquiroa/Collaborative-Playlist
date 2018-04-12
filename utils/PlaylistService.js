@@ -75,4 +75,24 @@ export default class PlaylistService extends ServiceProvider{
     playlist.tracks.items = items;
     return playlist;
   }
+
+  fetchPlaylists() {
+    const {id} = this.getProfile();
+
+    return this.fetch(`${this.domain}/v1/users/${id}/playlists`, {
+      method: 'GET',
+    }).then(res => {
+      return Promise.resolve(res);
+    });
+  }
+
+  fetchPlaylistSongs(id) {
+    const ownerId = this.getProfile().id;
+
+    return this.fetch(`${this.domain}/v1/users/${ownerId}/playlists/${id}/tracks?fields=items(added_by.id ,track(id,name))`, {
+      method: 'GET',
+    }).then(res => {
+      return Promise.resolve(res);
+    });
+  }
 }
