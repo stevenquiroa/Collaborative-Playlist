@@ -48,13 +48,13 @@ export default class PlayerService extends ServiceProvider {
     });
   }
 
-  setDevice(deviceId) {
-    localStorage.setItem('deviceId', deviceId);
+  setDevice(device) {
+    localStorage.setItem('device', JSON.stringify(device));
   }
 
   getDevice() {
-    const deviceId = localStorage.getItem('deviceId');
-    return deviceId ? localStorage.deviceId : null;
+    const deviceId = localStorage.getItem('device');
+    return deviceId ? JSON.parse(localStorage.device) : null;
   }
 
   setStatus(status) {

@@ -41,10 +41,10 @@ export default class PlaylistService extends ServiceProvider{
     });
   }
 
-  reorderPlaylist(playlist) {
+  reorderPlaylist(playlist, from = 0) {
     const { tracks } = playlist;
     let items = [];
-    const aux = tracks.items.reduce(
+    const aux = tracks.items.slice(from).reduce(
       (accumulator, { added_by, track }, currentIndex) => {
         if (typeof accumulator.users[added_by.id] === 'undefined') {
           accumulator.users[added_by.id] = [{ ...track, previousIndex: currentIndex}];
@@ -70,6 +70,10 @@ export default class PlaylistService extends ServiceProvider{
           }
         }
       });
+    }
+
+    if (from > 0) {
+      items = [...playlist.tracks.items.slice(0, from), ...items];
     }
 
     playlist.tracks.items = items;
