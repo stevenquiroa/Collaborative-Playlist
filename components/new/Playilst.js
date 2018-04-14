@@ -1,5 +1,6 @@
 import React, {Component, Fragment} from 'react';
 import PlaylistContext from "../../contexts/playlist-context";
+import PlayerContext from "../../contexts/player-context";
 
 import CreateOrUpdatePlaylist from './CreateOrUpdatePlaylist';
 
@@ -37,6 +38,8 @@ class CollaborativePlaylist extends Component {
 
   render() {
     const { playlist } = this.props.context.state;
+    console.log(this.props);
+    const trackId = (this.props.track && this.props.track.context === null) ? this.props.track.id : null;
     return (
       <div>
         {(playlist) ? (
@@ -46,7 +49,10 @@ class CollaborativePlaylist extends Component {
               <ul>
                 {playlist.tracks.items.map(({ added_by, track }, index)=> (
                   <li key={index}>{track.name} - {added_by.id} -
-                    <a onClick={this.playSong(index)}>Seleccionar</a>
+                    <a onClick={this.playSong(index)}>
+                      {(trackId === track.id ) ? 'Reproduciendo' : 'Seleccionar' }
+                    </a>
+
                   </li>
                 ))}
               </ul>
@@ -67,6 +73,10 @@ class CollaborativePlaylist extends Component {
 
 export default props => (
   <PlaylistContext.Consumer>
-    {context => <CollaborativePlaylist {...props} context={context} />}
+    {playlist => (
+    <PlayerContext.Consumer>
+      {context => <CollaborativePlaylist {...props} context={playlist} track={context.state.track} />}
+    </PlayerContext.Consumer>
+    )}
   </PlaylistContext.Consumer>
 );
