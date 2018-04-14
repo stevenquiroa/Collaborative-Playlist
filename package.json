@@ -20,6 +20,5 @@
     "build": "next build",
     "start": "NODE_ENV=production PORT=$PORT node server.js",
     "heroku-postbuild": "next build"
-
   }
 }
