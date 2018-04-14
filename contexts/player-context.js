@@ -5,10 +5,15 @@ const PlayerContext = createContext();
 export class PlayerProvider extends Component {
   state = {
     device: null,
+    track: null,
   };
 
   setDevice = (device) => {
     this.setState({ device });
+  };
+
+  setTrack = (track) => {
+    this.setState({ track });
   };
 
   render() {
@@ -17,6 +22,7 @@ export class PlayerProvider extends Component {
         value={{
           state: this.state,
           setDevice: this.setDevice,
+          setTrack: this.setTrack,
         }}>
         {this.props.children}
       </PlayerContext.Provider>

@@ -9,6 +9,7 @@ const RightContainer = () => (
     width: '29%',
     position: 'relative',
     display: 'inline-block',
+    verticalAlign: 'top',
   }}>
     <Player />
     <CreateOrUpdatePlaylist />

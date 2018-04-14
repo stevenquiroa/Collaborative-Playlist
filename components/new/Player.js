@@ -1,4 +1,4 @@
-import React, { Component }  from 'react';
+import React, {Component, Fragment} from 'react';
 import cookies from '../../utils/cookies';
 import PlayerContext from '../../contexts/player-context';
 
@@ -7,13 +7,37 @@ import PlayerService from "../../utils/PlayerService";
 
 const Player = new PlayerService('https://api.spotify.com');
 
+function fmtMSS(s){return(s-(s%=60))/60+(9<s?':':':0')+s};
+
 class CollaborativePlayer extends Component {
+  /*
+  player = {
+    progress (in seconds),
+    shuffle_state,
+    repeat_state,
+    is_playing
+    track : {
+      duration (in seconds)
+      name,
+      id,
+    }
+  }
+  * */
+  state = {
+    inWindow: true,
+    count: 0,
+    player: null,
+    loading: true,
+  };
+  processIntervalId = null;
+  timeout = 20;
   player = null;
+
   componentDidMount() {
     window.onSpotifyWebPlaybackSDKReady = () => {
       const token = cookies.getItem('accessToken');
       this.player = new Spotify.Player({
-        name: 'Collaborative Playlist Player',
+        name: 'Collaborative Playlist',
         getOAuthToken: cb => { cb(token); }
       });
 
@@ -24,20 +48,18 @@ class CollaborativePlayer extends Component {
       this.player.addListener('playback_error', ({ message }) => { console.error(message); });
 
       // Playback status updates
-      this.player.addListener('player_state_changed', (player) => {
-        console.log('player', player);
-        // Player.setStatus(player);
-        // if (player) {
-        //   const currentPlayer = {
-        //     id: Player.getDevice(),
-        //     name: 'Collaborative Playlist Player',
-        //   };
-        //   Player.setCurrentDevice(currentPlayer);
-        //   this.setState({ player, currentPlayer });
-        // } else {
-        //   this.setState({ player });
-        // }
+      this.player.addListener('player_state_changed', (state) => {
+        console.log('player', state);
 
+        // Player.setStatus(player);
+        if (state) {
+          Player.setCurrentDevice(Player.getDevice());
+          const player = this.formatStatus(state);
+          this.setState({ player, inWindow: true });
+          this.props.context.setTrack(player.track);
+        } else {
+          this.setState({ inWindow: false });
+        }
       });
 
       // Ready
@@ -46,22 +68,90 @@ class CollaborativePlayer extends Component {
           id: device_id,
           name: this.player._options.name,
         });
+        clearInterval(this.processIntervalId);
+        this.processIntervalId = window.setInterval(this.listener, 1000,this.timeout);
+        this.setState({ loading: false });
       });
       // Connect to the player!
       this.player.connect();
     };
 
+    this.fetchStatus();
+  };
+
+  fetchStatus = () => {
     Player.fetchStatus().then((res) => {
       if (res) {
         const { device } = res;
         this.props.context.setDevice(device);
         Player.setCurrentDevice(device);
+        const player = this.formatStatus(res);
+        this.setState({ player, inWindow: device.id === Player.getDevice().id });
+        this.props.context.setTrack(player.track);
       }
     });
-  }
+  };
+
+  formatStatus = (state) => {
+    const player = {};
+    if (state.track_window) {
+      const { track_window, shuffle, paused, repeat_mode, position, context} = state;
+      player.progress = parseInt(position / 1000, 10);
+      player.track = {
+        id: track_window.current_track.id,
+        name: track_window.current_track.name,
+        duration: parseInt(track_window.current_track.duration_ms / 1000, 10),
+        context: context.uri
+      };
+      player.shuffle_state = shuffle === 1;
+      const repeatsModes = ['off', 'on', 'track'];
+      player.repeat_state = repeatsModes[repeat_mode];
+      player.is_playing = !paused;
+    } else {
+      //out status
+      const { shuffle_state, repeat_state, is_playing, item, progress_ms, context } = state;
+      player.progress = parseInt(progress_ms / 1000, 10);
+      player.track = {
+        id: item.id,
+        name: item.name,
+        duration: parseInt(item.duration_ms / 1000, 10),
+        context: context ? context.uri : null,
+      };
+      player.shuffle_state = shuffle_state;
+      player.repeat_state = repeat_state;
+      player.is_playing = is_playing;
+    }
+    return player;
+  };
+
+  listener = (timeout) => {
+    if (this.state.count % timeout === 0) {
+      if (!this.state.inWindow) {
+        this.fetchStatus();
+      }
+    }
+
+    if(this.state.player && this.state.player.is_playing && this.state.player.progress < this.state.player.track.duration) {
+      this.setState({ player: {...this.state.player, progress : this.state.player.progress + 1 }});
+    }
+
+    this.setState({ count: this.state.count + 1 });
+
+  };
+
   render() {
     return (
-      <p>Player</p>
+      <div>
+        <p>--Live Reorder Begin--</p>
+        <Fragment>
+          {(!this.state.loading && this.state.player) ? (
+            <p>{this.state.player.track.name}: {fmtMSS(this.state.player.progress)}/{fmtMSS(this.state.player.track.duration)}</p>
+          ) : (
+            <p>Cargando...</p>
+          )}
+        </Fragment>
+        <p>--Live Reorder End--</p>
+      </div>
     );
   }
 }
