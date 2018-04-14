@@ -38,7 +38,6 @@ class CollaborativePlaylist extends Component {
 
   render() {
     const { playlist } = this.props.context.state;
-    console.log(this.props);
     const trackId = (this.props.track && this.props.track.context === null) ? this.props.track.id : null;
     return (
       <div>

@@ -1,11 +1,14 @@
 import React, {Component, Fragment} from 'react';
 import cookies from '../../utils/cookies';
 import PlayerContext from '../../contexts/player-context';
+import PlaylistContext from "../../contexts/playlist-context";
 
 import PlayerService from "../../utils/PlayerService";
-// import PlaylistService from "../utils/PlaylistService";
+import PlaylistService from "../../utils/PlaylistService";
+
 
 const Player = new PlayerService('https://api.spotify.com');
+const Playlist = new PlaylistService('https://api.spotify.com');
 
 function fmtMSS(s){return(s-(s%=60))/60+(9<s?':':':0')+s};
 
@@ -49,9 +52,6 @@ class CollaborativePlayer extends Component {
 
       // Playback status updates
       this.player.addListener('player_state_changed', (state) => {
-        console.log('player', state);
-
-        // Player.setStatus(player);
         if (state) {
           Player.setCurrentDevice(Player.getDevice());
           const player = this.formatStatus(state);
@@ -132,8 +132,25 @@ class CollaborativePlayer extends Component {
     }
 
     if(this.state.player && this.state.player.is_playing && this.state.player.progress < this.state.player.track.duration) {
+      if ((this.state.player.track.duration - this.state.player.progress) < 2) {
+        Player.fetchStatus().then((res) => {
+          const player = this.formatStatus(res);
+          if (player.is_playing && player.track.context === null) {
+            Playlist.rehidratePlaylist().then((res) => {
+              let playlist = Playlist.reorderPlaylist(res);
+              const index = playlist.tracks.items.findIndex(item => item.track.id === player.track.id) + 1;
+              playlist = Playlist.reorderPlaylist(playlist, index);
+              this.props.setPlaylist(playlist);
+              this.setState({ player, count: 18 });
+
+              Player.play(Player.getCurrentDevice().id, playlist.tracks, index);
+            });
+          }
+        });
+      }
       this.setState({ player: {...this.state.player, progress : this.state.player.progress + 1 }});
     }
+
 
     this.setState({ count: this.state.count + 1 });
 
@@ -158,7 +175,11 @@ class CollaborativePlayer extends Component {
 
 export default props => (
   <PlayerContext.Consumer>
-    {context => <CollaborativePlayer {...props} context={context} />}
+    {context => (
+      <PlaylistContext.Consumer>
+        {playlist => (<CollaborativePlayer {...props} context={context} playlist={playlist.playlist} setPlaylist={playlist.setPlaylist} />)}
+      </PlaylistContext.Consumer>
+    )}
   </PlayerContext.Consumer>
 );
 
